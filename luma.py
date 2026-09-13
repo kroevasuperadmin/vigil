@@ -58,9 +58,12 @@ def parse_sessions(description, start, tz):
         if date_match:
             current_date = dt.datetime.strptime(f"{date_match.group(2)} {date_match.group(3)} {start.year}", "%B %d %Y").date()
             continue
-        match = re.match(r"(\d{1,2}(?::\d{2})?\s*(?:AM|PM))\s*-\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM))\s*:\s*(.+)", line, re.I)
+        match = re.match(r"(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)\s*-\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM))\s*:\s*(.+)", line, re.I)
         if match:
-            begins, ends = parse_clock(match.group(1), current_date, tz), parse_clock(match.group(2), current_date, tz)
+            end_text = match.group(2)
+            begin_text = match.group(1)
+            if not re.search(r"(?:AM|PM)", begin_text, re.I): begin_text += " " + re.search(r"(AM|PM)", end_text, re.I).group(1)
+            begins, ends = parse_clock(begin_text, current_date, tz), parse_clock(end_text, current_date, tz)
             sessions.append({"title": match.group(3), "start_utc": begins.astimezone(UTC).isoformat(), "end_utc": ends.astimezone(UTC).isoformat(), "start_malaysia": begins.astimezone(MYT).isoformat(), "end_malaysia": ends.astimezone(MYT).isoformat()})
     return sessions
 
