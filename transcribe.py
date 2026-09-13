@@ -18,7 +18,7 @@ def readable(result):
 
 def download_url(url, directory):
     template = str(Path(directory) / "source.%(ext)s")
-    cmd = ["yt-dlp", "--no-playlist", "-x", "--audio-format", "mp3", "-o", template, url]
+    cmd = ["yt-dlp", "--no-playlist", "--js-runtimes", "node", "--extractor-args", "youtube:player_client=android", "-x", "--audio-format", "mp3", "-o", template, url]
     subprocess.run(cmd, check=True)
     files = list(Path(directory).glob("source.*"))
     if not files: raise RuntimeError("yt-dlp produced no audio file")
