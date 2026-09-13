@@ -10,7 +10,7 @@ def main():
     p = argparse.ArgumentParser(); p.add_argument("--url", required=True); p.add_argument("--event", required=True); p.add_argument("--label", required=True); p.add_argument("--segment-start", default=""); p.add_argument("--segment-end", default=""); p.add_argument("--capture-minutes", type=int, default=345)
     a = p.parse_args(); work = Path("work"); work.mkdir(exist_ok=True)
     template = str(work / "audio.%(ext)s")
-    command = ["yt-dlp", "--no-playlist", "--js-runtimes", "node", "--extractor-args", "youtube:player_client=android", "--live-from-start", "-x", "--audio-format", "mp3", "--continue", "-o", template]
+    command = ["yt-dlp", "--no-playlist", "--js-runtimes", "node", "--extractor-args", "youtube:player_client=android", "--extractor-args", "youtubepot-bgutilhttp:base_url=http://127.0.0.1:4416", "--live-from-start", "-x", "--audio-format", "mp3", "--continue", "-o", template]
     if a.segment_start or a.segment_end:
         command += ["--download-sections", f"*{a.segment_start or '00:00:00'}-{a.segment_end or '99:00:00'}"]
     command.append(a.url)

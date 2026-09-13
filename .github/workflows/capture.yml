@@ -52,8 +52,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Install small runtime dependencies
-        run: pip install --disable-pip-version-check requests yt-dlp
+      - name: Install capture runtime and YouTube proof-of-origin provider
+        run: |
+          pip install --disable-pip-version-check requests yt-dlp bgutil-ytdlp-pot-provider
+          git clone --depth 1 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git "$RUNNER_TEMP/bgutil"
+          (cd "$RUNNER_TEMP/bgutil/server" && npm ci && npx tsc && node build/main.js > "$RUNNER_TEMP/bgutil.log" 2>&1 &)
+          for n in {1..20}; do curl --fail --silent http://127.0.0.1:4416/ && break || sleep 1; done
       - name: Validate bounded capture
         run: |
           test -n "$ASSEMBLYAI_API_KEY"
