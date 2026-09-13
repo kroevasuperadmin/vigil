@@ -1,0 +1,75 @@
+name: Capture and transcribe event
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Public stream/replay URL, or access-gated URL that yt-dlp can read
+        required: true
+        type: string
+      label:
+        description: Safe filename label, e.g. day1-part1
+        required: true
+        type: string
+      event:
+        description: Event name used for the transcript folder
+        required: true
+        type: string
+      segment_start:
+        description: Optional replay offset HH:MM:SS
+        required: false
+        type: string
+      segment_end:
+        description: Optional replay offset HH:MM:SS (keep chunk <= 05:45:00)
+        required: false
+        type: string
+      capture_minutes:
+        description: Hard live-capture cap, maximum 345
+        required: false
+        default: "345"
+        type: string
+  schedule:
+    - cron: "30 15 * * *" # Optional: runs only after repository variables are configured.
+
+permissions:
+  contents: write
+
+jobs:
+  capture:
+    if: github.event_name == 'workflow_dispatch' || vars.ATTEND_SCHEDULE_URL != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    env:
+      ASSEMBLYAI_API_KEY: ${{ secrets.ASSEMBLYAI_API_KEY }}
+      URL: ${{ inputs.url || vars.ATTEND_SCHEDULE_URL }}
+      LABEL: ${{ inputs.label || vars.ATTEND_SCHEDULE_LABEL || 'scheduled' }}
+      EVENT: ${{ inputs.event || vars.ATTEND_SCHEDULE_EVENT || 'scheduled-event' }}
+      SEGMENT_START: ${{ inputs.segment_start || vars.ATTEND_SCHEDULE_SEGMENT_START }}
+      SEGMENT_END: ${{ inputs.segment_end || vars.ATTEND_SCHEDULE_SEGMENT_END }}
+      CAPTURE_MINUTES: ${{ inputs.capture_minutes || vars.ATTEND_SCHEDULE_CAPTURE_MINUTES || '345' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install small runtime dependencies
+        run: pip install --disable-pip-version-check requests yt-dlp
+      - name: Validate bounded capture
+        run: |
+          test -n "$ASSEMBLYAI_API_KEY"
+          test "$CAPTURE_MINUTES" -le 345
+      - name: Capture and transcribe
+        run: python capture.py --url "$URL" --label "$LABEL" --event "$EVENT" --segment-start "$SEGMENT_START" --segment-end "$SEGMENT_END" --capture-minutes "$CAPTURE_MINUTES"
+      - name: Commit transcript
+        run: |
+          git config user.name "attend-bot"
+          git config user.email "attend-bot@users.noreply.github.com"
+          git add transcripts/
+          git diff --cached --quiet || git commit -m "transcript: $EVENT / $LABEL"
+          git push
+      - name: Upload transcript artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: transcript-${{ env.LABEL }}
+          path: transcripts/
+          if-no-files-found: error
