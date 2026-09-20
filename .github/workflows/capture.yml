@@ -36,17 +36,17 @@ permissions:
 
 jobs:
   capture:
-    if: github.event_name == 'workflow_dispatch' || vars.ATTEND_SCHEDULE_URL != ''
+    if: github.event_name == 'workflow_dispatch' || vars.VIGIL_SCHEDULE_URL != '' || vars.ATTEND_SCHEDULE_URL != ''
     runs-on: ubuntu-latest
     timeout-minutes: 355
     env:
       ASSEMBLYAI_API_KEY: ${{ secrets.ASSEMBLYAI_API_KEY }}
-      URL: ${{ inputs.url || vars.ATTEND_SCHEDULE_URL }}
-      LABEL: ${{ inputs.label || vars.ATTEND_SCHEDULE_LABEL || 'scheduled' }}
-      EVENT: ${{ inputs.event || vars.ATTEND_SCHEDULE_EVENT || 'scheduled-event' }}
-      SEGMENT_START: ${{ inputs.segment_start || vars.ATTEND_SCHEDULE_SEGMENT_START }}
-      SEGMENT_END: ${{ inputs.segment_end || vars.ATTEND_SCHEDULE_SEGMENT_END }}
-      CAPTURE_MINUTES: ${{ inputs.capture_minutes || vars.ATTEND_SCHEDULE_CAPTURE_MINUTES || '345' }}
+      URL: ${{ inputs.url || vars.VIGIL_SCHEDULE_URL || vars.ATTEND_SCHEDULE_URL }}
+      LABEL: ${{ inputs.label || vars.VIGIL_SCHEDULE_LABEL || vars.ATTEND_SCHEDULE_LABEL || 'scheduled' }}
+      EVENT: ${{ inputs.event || vars.VIGIL_SCHEDULE_EVENT || vars.ATTEND_SCHEDULE_EVENT || 'scheduled-event' }}
+      SEGMENT_START: ${{ inputs.segment_start || vars.VIGIL_SCHEDULE_SEGMENT_START || vars.ATTEND_SCHEDULE_SEGMENT_START }}
+      SEGMENT_END: ${{ inputs.segment_end || vars.VIGIL_SCHEDULE_SEGMENT_END || vars.ATTEND_SCHEDULE_SEGMENT_END }}
+      CAPTURE_MINUTES: ${{ inputs.capture_minutes || vars.VIGIL_SCHEDULE_CAPTURE_MINUTES || vars.ATTEND_SCHEDULE_CAPTURE_MINUTES || '345' }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -62,8 +62,8 @@ jobs:
         run: python capture.py --url "$URL" --label "$LABEL" --event "$EVENT" --segment-start "$SEGMENT_START" --segment-end "$SEGMENT_END" --capture-minutes "$CAPTURE_MINUTES"
       - name: Commit transcript
         run: |
-          git config user.name "attend-bot"
-          git config user.email "attend-bot@users.noreply.github.com"
+          git config user.name "vigil-bot"
+          git config user.email "vigil-bot@users.noreply.github.com"
           git add transcripts/
           git diff --cached --quiet || git commit -m "transcript: $EVENT / $LABEL"
           git push

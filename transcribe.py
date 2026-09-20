@@ -35,7 +35,7 @@ def transcribe(source, output_base, key, poll_seconds=3):
     temporary = None
     source_path = Path(source)
     if source.startswith(("http://", "https://")):
-        temporary = tempfile.TemporaryDirectory(prefix="attend-")
+        temporary = tempfile.TemporaryDirectory(prefix="vigil-")
         source_path = download_url(source, temporary.name)
     if not source_path.is_file(): raise FileNotFoundError(source_path)
     audio_url = upload(source_path, headers)

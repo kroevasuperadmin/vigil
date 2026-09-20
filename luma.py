@@ -18,7 +18,7 @@ def fetch(url, cookies=None):
         except Exception as exc:
             raise SystemExit(f"Could not read Netscape cookies file {cookies}: {exc}")
         opener = build_opener(HTTPCookieProcessor(jar))
-    request = Request(url, headers={"User-Agent": "Mozilla/5.0 Attend/1.0"})
+    request = Request(url, headers={"User-Agent": "Mozilla/5.0 Vigil/1.0"})
     return opener.open(request, timeout=30).read().decode("utf-8")
 
 def next_data(page):
